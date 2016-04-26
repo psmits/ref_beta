@@ -36,6 +36,6 @@ accelerating can be observed, but the effect is probably where between 0.5 and
 
 the prior for mu is based on Wang et al. but with slightly less variance.
 
-the prior for sigma is based on recomendations in the Gelman et al. 2013 BDA3 book, the STAN manual, and else where.
+the prior for sigma is based on recomendations in the Gelman et al. 2013 BDA3 book, the STAN manual, and elsewhere. sigma the taxon-level variance in lambda and is acting as a shrkinage effect on draws from lambda.
 
 
