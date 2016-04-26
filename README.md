@@ -4,7 +4,8 @@ reflected Beta distribution
 hierarchical application is cross species analysis
 --------------------------------------------------
 
-based on math in Wang et al. 2016 Paleobiology.
+based on math in [Wang et al. 2016
+Paleobiology.](http://paleobiol.geoscienceworld.org/content/42/2/240.abstract)
 
 pdf, cdf, qf, and random draws all work
 
