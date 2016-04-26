@@ -24,6 +24,13 @@ pdf.refbeta <- function(x, lambda, theta) {
 
 #' Cummulative distribution function of the reflected beta distribution
 #'
+#' @param x observation time
+#' @param lambda parameter of reflected beta distribution
+#' @param theta expected duration of species being sampled at x
+#' @return cummulative probability of x given lambda and theta
+#' @export
+#' @examples
+#' cdf.refbeta(0.5, lambda = 0, theta = 1)
 cdf.refbeta <- function(x, lambda, theta) {
   my.int <- function(x, lambda, theta) {
     integrate(pdf.refbeta, 
@@ -36,6 +43,13 @@ cdf.refbeta <- function(x, lambda, theta) {
 
 #' Quantile function of the reflected beta distribution
 #'
+#' @param q quantile (percent)
+#' @param lambda parameter of reflected beta distribution
+#' @param theta expected duration of species being sampled at x
+#' @return age of samples at the qth quantile of reflected beta with lambda and theta
+#' @export
+#' @examples
+#' qf.refbeta(0.5, lambda = 0, theta = 1)
 qf.refbeta <- function(q, lambda, theta) {
   # function to be solved for 0
   f <- function(P, fixed) {
@@ -65,18 +79,15 @@ qf.refbeta <- function(q, lambda, theta) {
 
 #' Generate random observation times from the reflected beta distribution
 #'
+#' @param N number of random samples
+#' @param lambda parameter of reflected beta distribution
+#' @param theta expected duration of species being sampled at x
+#' @return random fossil age sampled from duration defined by reflected beta distribution with lambda and theta
+#' @export
+#' @examples
+#' rng.refbeta(1, lambda = 0, theta = 1)
 rng.refbeta <- function(N, lambda, theta) {
   U <- runif(N, min=0, max=1)
   rnd.draws <- qf.refbeta(U, lambda, theta)
   return(rnd.draws)
 }
-
-
-
-#pdf.refbeta(x = seq(0.01, 0.99, 0.01), lambda = -2, theta = 1)
-#
-#cdf.refbeta(x = seq(0.01, 0.99, 0.01), lambda = -2, theta = 1)
-#
-#qf.refbeta(q = seq(0.01, 0.99, 0.01), lambda = -2, theta = 1)
-#
-#rng.refbeta(N = 100, lambda = -2, theta = 1)
