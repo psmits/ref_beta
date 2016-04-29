@@ -16,7 +16,7 @@ prior predictive code/tiny simulation wrapper does the following
 -  lambda is modeled as a draw from a normal distribution with mu and sigma
 -  mu is drawn from normal with mean 0 and sd 1
 -  sigma is drawn from a half-t distribution with 2 degrees of freedom
--  theta is modeled as a draw from a weibull distribution with shape and scale
+-  theta is modeled as a draw from a Weibull distribution with shape and scale
 -  shape is drawn from a log-Normal distribution with log-mean 0 and log-sd 0.3
 -  scale is drawn from an Exponential distribution with rate 1/4
 
@@ -34,7 +34,7 @@ of Constant Extinction) and the observation that both decelerating and
 accelerating can be observed, but the effect is probably where between 0.5 and
 1.5 (with a bunch of room for error).
 
-the prior for mu is based on Wang et al. but with slightly less variance.
+mu is the average value of lambda for all occurrence records. the prior for mu is based on Wang et al. but with slightly less variance.
 
 the prior for sigma is based on recomendations in the Gelman et al. 2013 BDA3 book, the STAN manual, and elsewhere. sigma the taxon-level variance in lambda and is acting as a shrkinage effect on draws from lambda.
 

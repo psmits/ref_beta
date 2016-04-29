@@ -16,7 +16,7 @@ simulate.record <- function(nsim, mean) {
 
   # hyper priors for lambda
   mu <- rnorm(nsim, mean = 0, sd = 1)
-  sigma <- abs(rt(nsim, df = 2))
+  sigma <- abs(rt(nsim, df = 1))
 
   rtpois <- function(N, lambda) {
     qpois(runif(N, dpois(0, lambda), 1), lambda)
@@ -39,7 +39,6 @@ simulate.record <- function(nsim, mean) {
 }
 
 sim1 <- simulate.record(1000, mean = 5)
-
 age <- data.frame(theta = sim1$theta, max = laply(sim1$sim, max))
 age <- melt(age)
 age.plot <- ggplot(age, aes(x = value, y = ..density.., fill = variable))
