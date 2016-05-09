@@ -15,7 +15,7 @@ prior predictive code/tiny simulation wrapper does the following
 -  draw from rBeta that many observations with lambda and theta
 -  lambda is modeled as a draw from a normal distribution with mu and sigma
 -  mu is drawn from normal with mean 0 and sd 1
--  sigma is drawn from a half-t distribution with 2 degrees of freedom
+-  sigma is drawn from a half-t distribution with 1 degrees of freedom
 -  theta is modeled as a draw from a Weibull distribution with shape and scale
 -  shape is drawn from a log-Normal distribution with log-mean 0 and log-sd 0.3
 -  scale is drawn from an Exponential distribution with rate 1/4
