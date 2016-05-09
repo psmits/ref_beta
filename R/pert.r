@@ -9,7 +9,7 @@ simulate.record <- function(nsim, mean.samp) {
   s <- e <- c()
   m <- l <- c()
 
-  shape <- rlnorm(nsim, meanlog = 0, sdlog = 0.3)
+  shape <- rlnorm(nsim, meanlog = 0, sdlog = log(1.35))
   scale <- rexp(nsim, 1 / 4)
 
   # save time by doing all of them now
@@ -17,7 +17,7 @@ simulate.record <- function(nsim, mean.samp) {
   e <- s + rweibull(nsim, shape, scale)
 
   m <- runif(nsim, min = s, max = e)
-  l <- rlnorm(nsim, meanlog = log(4), sdlog = 0.3)
+  l <- rlnorm(nsim, meanlog = log(4), sdlog = log(1.5))
   
   rtpois <- function(N, lambda) {
     qpois(runif(N, dpois(0, lambda), 1), lambda)
@@ -39,9 +39,16 @@ simulate.record <- function(nsim, mean.samp) {
   out
 }
 
+
 out <- replicate(100, simulate.record(100, 5), simplify = FALSE)
+est.duration <- llply(out, function(y) 
+                      laply(y$sim, function(x) max(x) - min(x)))
 durations <- llply(out, function(x) x$e - x$s)
 dur.melt <- melt(durations)  # easy to plot the densities
+est.melt <- melt(est.duration)
+diff.duration <- hist(dur.melt[, 1] - est.melt[, 1])
 
 dur.surv <- llply(durations, Surv)  # make survival objects
 dur.km <- llply(dur.surv, function(x) survfit(x ~ 1))  # k-m nonpara est
+est.surv <- llply(est.duration, Surv)  # make survival objects
+est.km <- llply(est.surv, function(x) survfit(x ~ 1))  # k-m nonpara est
