@@ -25,4 +25,41 @@ functions {
    return log(d);
  }
 }
+data {
+  int N;  // total number of occurrences
+  int S;  // total number of species
+  int M;  // maximum possible age of origination
+
+  real y[N];  // occurrence ages
+  int taxon[N];  // which species is occurrence from
+}
+parameters {
+  vector<lower=0,upper=M>[S] start;
+  vector<lower=0>[S] end;
+  vector<lower=0>[S] mid;
+  
+  vector[S] m;
+  vector<lower=0>[S] l;
+
+  real<lower=0> shape;
+  real<lower=0> scale;
+}
+transformed parameters {
+}
+model {
+  shape ~ lognormal(0, log(1.35));
+  scale ~ exponential(0.5);
+
+  m ~ uniform(start, end);
+  l ~ lognormal(log(4), log(1.5));
+
+  (end - start) ~ weibull(shape, scale);
+
+  for(n in 1:N) {
+    y[n] ~ pert(start[taxon[n]], end[taxon[n]], mid[taxon[n]], l[n]);
+  }
+
+}
+generated quantities {
+}
 
