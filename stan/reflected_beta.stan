@@ -11,11 +11,46 @@ functions {
     real p;
 
     if(lambda > 0) {
-      p <- ((1 + lambda) / theta) * ((x / theta)^lambda)
+      p <- ((1 + lambda) / theta) * ((y / theta)^lambda);
     } else if(lambda <= 0) {
-      p <- ((1 - lambda) / theta) * (1 - (x / theta))^(lambda * -1)
+      p <- ((1 - lambda) / theta) * (1 - (y / theta))^(lambda * -1);
     }
-    return log(p)
+    return log(p);
   }
 }
-      
+data {
+  int N;  // total number of occurrences
+  int S;  // total number of species
+  int L;  // left-truncation point
+
+  real y[N];  // occurrence ages
+  int taxon[N];  // which species is occurrence from
+}
+parameters {
+  vector[S] theta;
+  real<lower=0> shape;
+  real<lower=0> scale;
+  
+  vector[S] lambda;
+  real mu;
+  real<lower=0> sigma;
+}
+transformed parameters {
+}
+model {
+  increment_log_prob(weibull_log(theta, shape, scale) - 
+      weibull_ccdf_log(L, shape, scale));
+  shape ~ lognormal(0, 0.3);
+  scale ~ exponential(0.25);
+
+  lambda ~ normal(mu, sigma);
+  mu ~ normal(0, 1);
+  sigma ~ cauchy(0, 1);
+
+  for(n in 1:N) {
+    y[n] ~ reflected_beta(lambda[taxon[n]], theta[taxon[n]]);
+  }
+
+}
+generated quantities {
+}
