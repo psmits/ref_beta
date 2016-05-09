@@ -14,10 +14,9 @@ simulate.record <- function(nsim, mean.samp) {
 
   # save time by doing all of them now
   s <- runif(nsim, min = 0, max = 30)
-  e <- s + rweibull(nsim, shape, scale)
 
-  m <- runif(nsim, min = s, max = e)
-  l <- rlnorm(nsim, meanlog = log(4), sdlog = log(1.5))
+  l.mu <- rnorm(nsim, 4, 0.5)
+  l.sd <- 1 + rexp(nsim, 5)
   
   rtpois <- function(N, lambda) {
     qpois(runif(N, dpois(0, lambda), 1), lambda)
@@ -26,6 +25,10 @@ simulate.record <- function(nsim, mean.samp) {
   nsamp <- rtpois(nsim, mean.samp)
 
   for(ii in seq(nsim)) {
+    e[ii] <- s[ii] + rweibull(1, shape, scale)
+    m[ii] <- runif(1, min = s[ii], max = e[ii])
+    l[ii] <- rlnorm(1, meanlog = log(l.mu[ii]), sdlog = log(l.sd))
+
     simout[[ii]] <- sort(rpert(nsamp[ii], 
                                min = s[ii], 
                                max = e[ii], 
@@ -35,7 +38,8 @@ simulate.record <- function(nsim, mean.samp) {
 
   out <- list(sim = simout, 
               s = s, e = e, m = m, l = l,  # from the pert
-              shape = shape, scale = scale)  # from the weibull
+              shape = shape, scale = scale,
+              l.mu = l.mu, l.sd = l.sd)  # from the weibull
   out
 }
 
@@ -46,7 +50,7 @@ est.duration <- llply(out, function(y)
 durations <- llply(out, function(x) x$e - x$s)
 dur.melt <- melt(durations)  # easy to plot the densities
 est.melt <- melt(est.duration)
-diff.duration <- hist(dur.melt[, 1] - est.melt[, 1])
+#diff.duration <- hist(dur.melt[, 1] - est.melt[, 1])
 
 dur.surv <- llply(durations, Surv)  # make survival objects
 dur.km <- llply(dur.surv, function(x) survfit(x ~ 1))  # k-m nonpara est

@@ -31,35 +31,36 @@ data {
   int M;  // maximum possible age of origination
 
   real y[N];  // occurrence ages
-  int taxon[N];  // which species is occurrence from
+  int taxon[N];  // which species is occurrence n from
 }
 parameters {
-  vector<lower=0,upper=M>[S] start;
-  vector<lower=0>[S] end;
-  vector<lower=0>[S] mid;
-  
-  vector[S] m;
-  vector<lower=0>[S] l;
+  vector<lower=0,upper=M>[S] start;  // actual origination time
+  vector<lower=0>[S] end;  // actual exinction time
+  vector[S] mid;  // mode
 
-  real<lower=0> shape;
-  real<lower=0> scale;
+  vector<lower=0>[S] l;  // shape
+  real l_mu;  // mean of exp(l)
+  real<lower=0> l_sigma;  // stdec of exp(l)
+
+  real<lower=0> shape;  // shape of weibull for end - start
+  real<lower=0> scale;  // scale of weibull for end - start
 }
 transformed parameters {
 }
 model {
-  shape ~ lognormal(0, log(1.35));
-  scale ~ exponential(0.5);
-
-  m ~ uniform(start, end);
-  l ~ lognormal(log(4), log(1.5));
+  mid ~ uniform(start, end);  // the mode has to be between end and start
+  
+  l ~ lognormal(log(l_mu), log(l_sigma));
+  l_mu ~ normal(4, 1);
+  (l_sigma + 1) ~ exponential(1);
 
   (end - start) ~ weibull(shape, scale);
+  shape ~ lognormal(0, log(1.35));
+  scale ~ exponential(0.5);
 
   for(n in 1:N) {
     y[n] ~ pert(start[taxon[n]], end[taxon[n]], mid[taxon[n]], l[n]);
   }
-
 }
 generated quantities {
 }
-

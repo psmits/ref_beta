@@ -27,13 +27,13 @@ data {
   int taxon[N];  // which species is occurrence from
 }
 parameters {
-  vector[S] theta;
-  real<lower=0> shape;
-  real<lower=0> scale;
+  vector[S] theta;  // duration
+  real<lower=0> shape;  // shape of weibull for duration
+  real<lower=0> scale;  // scale of weibull for duration
   
-  vector[S] lambda;
-  real mu;
-  real<lower=0> sigma;
+  vector[S] lambda;  // profile of sampling probability
+  real mu;  // mean of profile
+  real<lower=0> sigma;  // stdev of profile
 }
 transformed parameters {
 }
@@ -50,7 +50,6 @@ model {
   for(n in 1:N) {
     y[n] ~ reflected_beta(lambda[taxon[n]], theta[taxon[n]]);
   }
-
 }
 generated quantities {
 }
