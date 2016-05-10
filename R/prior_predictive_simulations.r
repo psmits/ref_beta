@@ -1,9 +1,11 @@
 library(reshape2)
+library(mc2d)
+library(survival)
 library(plyr)
 library(ggplot2)
 source('../R/reflected_beta.r')
 
-simulate.record <- function(nsim, mean) {
+prior.predict.ref.beta <- function(nsim, mean.samp = 5) {
   simout <- list()
   theta <- lambda <- c()
   shape <- scale <- c()
@@ -22,7 +24,7 @@ simulate.record <- function(nsim, mean) {
     qpois(runif(N, dpois(0, lambda), 1), lambda)
   }
 
-  nsamp <- rtpois(nsim, mean)
+  nsamp <- rtpois(nsim, mean.samp)
 
   for(ii in seq(nsim)) {
 
@@ -38,8 +40,45 @@ simulate.record <- function(nsim, mean) {
   out
 }
 
-sim1 <- simulate.record(1000, mean = 5)
-age <- data.frame(theta = sim1$theta, max = laply(sim1$sim, max))
-age <- melt(age)
-age.plot <- ggplot(age, aes(x = value, y = ..density.., fill = variable))
-age.plot <- age.plot + geom_density(alpha = 0.3)
+prior.predict.pert <- function(nsim, mean.samp = 5) {
+  simout <- list()
+  s <- e <- c()
+  m <- l <- c()
+
+  shape <- rlnorm(nsim, meanlog = 0, sdlog = log(1.35))
+  scale <- rexp(nsim, 1 / 4)
+
+  # save time by doing all of them now
+  s <- runif(nsim, min = 0, max = 30)
+
+  l.mu <- rnorm(nsim, 4, 0.5)
+  l.sd <- 1 + rexp(nsim, 5)
+  
+  rtpois <- function(N, lambda) {
+    qpois(runif(N, dpois(0, lambda), 1), lambda)
+  }
+
+  nsamp <- rtpois(nsim, mean.samp)
+
+  for(ii in seq(nsim)) {
+    e[ii] <- s[ii] + rweibull(1, shape, scale)
+    m[ii] <- runif(1, min = s[ii], max = e[ii])
+    l[ii] <- rlnorm(1, meanlog = log(l.mu[ii]), sdlog = log(l.sd))
+
+    simout[[ii]] <- sort(rpert(nsamp[ii], 
+                               min = s[ii], 
+                               max = e[ii], 
+                               mode = m[ii], 
+                               shape = l[ii]))
+  }
+
+  out <- list(sim = simout, 
+              s = s, e = e, m = m, l = l,  # from the pert
+              shape = shape, scale = scale,
+              l.mu = l.mu, l.sd = l.sd)  # from the weibull
+  out
+}
+
+
+sim.ref.beta <- prior.predict.ref.beta(1000, mean.samp = 5)
+sim.pert <- prior.predict.pert(1000, mean.samp = 5)
