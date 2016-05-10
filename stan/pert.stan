@@ -54,6 +54,7 @@ model {
   l_mu ~ normal(4, 1);
   (l_sigma + 1) ~ exponential(1);
 
+  // this is where i would put in the censoring information
   (end - start) ~ weibull(shape, scale);
   shape ~ lognormal(0, log(1.35));
   scale ~ exponential(0.5);
@@ -61,6 +62,4 @@ model {
   for(n in 1:N) {
     y[n] ~ pert(start[taxon[n]], end[taxon[n]], mid[taxon[n]], l[n]);
   }
-}
-generated quantities {
 }

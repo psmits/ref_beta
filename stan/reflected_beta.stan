@@ -38,6 +38,7 @@ parameters {
 transformed parameters {
 }
 model {
+  // this is where i would put in the censoring information
   increment_log_prob(weibull_log(theta, shape, scale) - 
       weibull_ccdf_log(L, shape, scale));
   shape ~ lognormal(0, 0.3);
@@ -50,6 +51,4 @@ model {
   for(n in 1:N) {
     y[n] ~ reflected_beta(lambda[taxon[n]], theta[taxon[n]]);
   }
-}
-generated quantities {
 }
