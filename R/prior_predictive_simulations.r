@@ -40,6 +40,7 @@ prior.predict.ref.beta <- function(nsim, mean.samp = 5) {
   out
 }
 
+
 prior.predict.pert <- function(nsim, mean.samp = 5) {
   simout <- list()
   s <- e <- c()
@@ -80,5 +81,6 @@ prior.predict.pert <- function(nsim, mean.samp = 5) {
 }
 
 
+sim.ref.beta <- prior.predict.ref.beta(1, mean.samp = 5)
 sim.ref.beta <- prior.predict.ref.beta(1000, mean.samp = 5)
 sim.pert <- prior.predict.pert(1000, mean.samp = 5)

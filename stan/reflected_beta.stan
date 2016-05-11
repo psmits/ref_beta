@@ -20,35 +20,31 @@ functions {
 }
 data {
   int N;  // total number of occurrences
-  int S;  // total number of species
-  int L;  // left-truncation point
+  int S;
+  real L;  // left-truncation point
 
   real y[N];  // occurrence ages
   int taxon[N];  // which species is occurrence from
 }
 parameters {
-  vector[S] theta;  // duration
+  vector<lower=0>[S] duration;  // duration
   real<lower=0> shape;  // shape of weibull for duration
   real<lower=0> scale;  // scale of weibull for duration
   
-  vector[S] lambda;  // profile of sampling probability
-  real mu;  // mean of profile
-  real<lower=0> sigma;  // stdev of profile
+  real sampling;  // profile of sampling probability
 }
 transformed parameters {
 }
 model {
   // this is where i would put in the censoring information
-  increment_log_prob(weibull_log(theta, shape, scale) - 
-      weibull_ccdf_log(L, shape, scale));
   shape ~ lognormal(0, 0.3);
-  scale ~ exponential(0.25);
+  scale ~ normal(0, 4);
+  
+  duration ~ weibull(shape, scale);
 
-  lambda ~ normal(mu, sigma);
-  mu ~ normal(0, 1);
-  sigma ~ cauchy(0, 1);
+  sampling ~ normal(0, 1);
 
   for(n in 1:N) {
-    y[n] ~ reflected_beta(lambda[taxon[n]], theta[taxon[n]]);
+    y[n] ~ reflected_beta(sampling, duration[taxon[n]]);
   }
 }
