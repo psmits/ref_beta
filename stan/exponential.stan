@@ -7,7 +7,7 @@ parameters {
   real<lower=0> rate;  // shape of weibull for duration
 }
 model {
-  rate ~ exponential(0.25)
+  rate ~ exponential(0.25);
   
   d ~ exponential(rate);
 }

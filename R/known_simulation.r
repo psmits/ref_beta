@@ -5,14 +5,13 @@ library(survival)
 library(plyr)
 library(parallel)
 library(ggplot2)
-source('../R/sort.simulation.r')
+source('../R/sort_simulation.r')
+source('../R/fit_stan_to_sim.r')
 source('../R/reflected_beta.r')
 
-y <- 0.3589448
-lambda <- 0.3906438
-theta <- 1
-pdf.refbeta(y, lambda, theta)
-
+stanfiles <- list.files(path = '../stan', 
+                        pattern = '*.stan', 
+                        full.names = TRUE)
 
 set.seed(420)
 # simulate from truncated poisson
@@ -85,43 +84,59 @@ for(mm in seq(length(model))) {
 sim.df <- melt(bymodel)
 names(sim.df) <- c('age', 'sp', 'ntax', 'samp.form', 'mean.occ', 'model')
 
-sim.df.beta <- sim.df[sim.df$ntax == 3 & 
-                      sim.df$samp.form == 1 &
-                      sim.df$mean.occ == 1 & 
-                      sim.df$model == 1, ]
-sim.df.pert <- sim.df[sim.df$ntax == 3 & 
-                      sim.df$samp.form == 2 &
-                      sim.df$mean.occ == 1 & 
-                      sim.df$model == 2, ]
+sim.df.beta.flat <- sim.df[sim.df$ntax == 3 & 
+                           sim.df$samp.form == 1 &
+                           sim.df$mean.occ == 1 & 
+                           sim.df$model == 1, ]
+
+sim.df.beta.rise <- sim.df[sim.df$ntax == 3 & 
+                           sim.df$samp.form == 3 &
+                           sim.df$mean.occ == 1 & 
+                           sim.df$model == 1, ]
+
+sim.df.beta.fall <- sim.df[sim.df$ntax == 3 & 
+                           sim.df$samp.form == 2 &
+                           sim.df$mean.occ == 1 & 
+                           sim.df$model == 1, ]
+
+sim.df.pert.mid <- sim.df[sim.df$ntax == 3 & 
+                          sim.df$samp.form == 2 &
+                          sim.df$mean.occ == 1 & 
+                          sim.df$model == 2, ]
+
+sim.df.pert.wide <- sim.df[sim.df$ntax == 3 & 
+                           sim.df$samp.form == 1 &
+                           sim.df$mean.occ == 1 & 
+                           sim.df$model == 2, ]
+
+sim.df.pert.narrow <- sim.df[sim.df$ntax == 3 & 
+                             sim.df$samp.form == 3 &
+                             sim.df$mean.occ == 1 & 
+                             sim.df$model == 2, ]
 
 
-stan.beta <- sort.data(sim.df.beta)
-stan.pert <- sort.data(sim.df.pert)
+stan.beta.flat <- sort.data(sim.df.beta.flat, theta)
+stan.beta.rise <- sort.data(sim.df.beta.rise, theta)
+stan.beta.fall <- sort.data(sim.df.beta.fall, theta)
+stan.pert.mid <- sort.data(sim.df.pert.mid, theta)
+stan.pert.wide <- sort.data(sim.df.pert.wide, theta)
+stan.pert.narrow <- sort.data(sim.df.pert.narrow, theta)
 
-#with(stan.beta, {stan_rdump(list = c('N', 'S', 'M',
-#                                     'y', 'd', 'sp'),
-#                            file = '../data/data_dump/sim_beta.data.R')})
-#with(stan.pert, {stan_rdump(list = c('N', 'S', 'M',
-#                                     'y', 'd', 'sp'),
-#                            file = '../data/data_dump/sim_pert.data.R')})
-
-rb.stan.beta <- stan(file = '../stan/reflected_beta.stan',
-                     data = stan.beta,
-                     chains = 1, iter = 1)
-rbblist <- mclapply(1:4, mc.cores = detectCores(), 
-                    function(i) stan(fit = rb.stan.beta, 
-                                     iter = 2000,
-                                     data = stan.beta, 
-                                     chains = 1, chain_id = 1, refresh = -1))
-rbbfit <- sflist2stanfit(rbblist)
+standata <- list(stan.beta.flat, stan.beta.rise, stan.beta.fall,
+                 stan.pert.mid, stan.pert.wide, stan.pert.narrow)
 
 
-rb.stan.pert <- stan(file = '../stan/reflected_beta.stan',
-                     data = stan.pert,
-                     chains = 1, iter = 1)
-rbplist <- mclapply(1:4, mc.cores = detectCores(), 
-                    function(i) stan(fit = rb.stan.pert,
-                                     iter = 2000,
-                                     data = stan.pert, 
-                                     chains = 1, chain_id = 1, refresh = -1))
-rbpfit <- sflist2stanfit(rbplist)
+byfile <- list()
+for(ii in seq(length(stanfiles))) {
+  bydata <- list()
+  for(jj in seq(length(standata))) {
+    bydata[[jj]] <- fit.simulation(standata = standata[[jj]],
+                                   stanfile = stanfiles[[ii]])
+  }
+  byfile[[ii]] <- bydata
+}
+
+#byfile[[1]]  # exponential model
+#byfile[[2]]  # pert model
+#byfile[[3]]  # reflected beta model
+#byfile[[4]]  # weibull model

@@ -1,4 +1,4 @@
-sort.data <- function(sim.df.short) {
+sort.data <- function(sim.df.short, theta) {
   sim.df.short <- sim.df.short[sim.df.short$sp %in% 
                                which(table(sim.df.short$sp) > 1), ]
 
@@ -27,7 +27,7 @@ sort.data <- function(sim.df.short) {
   # all ready
   standata <- list(N = nrow(sim.df.short),
                    S = max(sim.df.short$sp),
-                   M = max(theta[[1]]),
+                   M = max(theta[[unique(sim.df.short$ntax)]]) * 1.5,
                    y = sim.df.short$age,
                    d = d,
                    sp = sim.df.short$sp)

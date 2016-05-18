@@ -36,7 +36,7 @@ data {
 parameters {
   vector<lower=0,upper=M>[S] start;  // actual origination time
   vector<lower=0,upper=M>[S] end;  // actual exinction time
-  vector<lower=0,upper=M>[S] mid;  // mode
+  vector<lower=0,upper=M>[S] mid;  // mode -- not constrained :( :( :( :(
 
   vector<lower=0>[S] l;  // shape
   real l_mu;  // mean of exp(l)
@@ -48,14 +48,11 @@ parameters {
 transformed parameters {
 }
 model {
-  
-  l ~ lognormal(l_mu, l_sigma);
-  l_mu ~ exponential(0.25);
-  l_sigma ~ exponential(1);
+  l ~ lognormal(1.35, 0.5);
 
   // this is where i would put in the censoring information
   (end - start) ~ weibull(shape, scale);
-  shape ~ lognormal(0, log(1.35));
+  shape ~ lognormal(0, 0.3);
   scale ~ exponential(0.5);
 
   for(n in 1:N) {
