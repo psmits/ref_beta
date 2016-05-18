@@ -5,15 +5,23 @@ library(survival)
 library(plyr)
 library(parallel)
 library(ggplot2)
+source('../R/sort.simulation.r')
 source('../R/reflected_beta.r')
 
+y <- 0.3589448
+lambda <- 0.3906438
+theta <- 1
+pdf.refbeta(y, lambda, theta)
+
+
+set.seed(420)
 # simulate from truncated poisson
 rtpois <- function(N, lambda) {
   qpois(runif(N, dpois(0, lambda), 1), lambda)
 }
 
 shapes <- c(0.75, 1, 1.25)
-shapes <- shapes[1]
+shapes <- shapes[2]
 
 samp.mean <- c(5, 10, 20)  # mean number of samples per taxon
 ntaxa <- c(10, 50, 100)  # number of taxa sampled
@@ -21,16 +29,18 @@ lambda <- c(0, -1, 1)  # lambda for ref beta
 
 M <- 30
 minp <- llply(ntaxa, function(x) runif(x, 0, M))
-maxp <- llply(ntaxa, function(x) rweibull(x, shape = shapes[1], scale = 4))
+maxp <- llply(ntaxa, function(x) rweibull(x, shape = shapes, scale = 4))
 maxp <- Map(function(x, y) x + y, minp, maxp)
 
 shapep <- c(2, 4, 6)
 
 modep <- Map(function(x, y) ((x - y) / 2) + y, maxp, minp)
-
+modef <- list(Map(function(x, y) ((x - y) / 4) + y, maxp, minp),
+              Map(function(x, y) ((x - y) / 2) + y, maxp, minp),
+              Map(function(x, y) (((x - y) / 4) * 3) + y, maxp, minp))
 
 # the ages of all the taxa
-theta <- llply(ntaxa, function(x) rweibull(x, shape = shapes[1], scale = 4))
+theta <- llply(ntaxa, function(x) rweibull(x, shape = shapes, scale = 4))
 
 model <- c('refbeta', 'pert')
 
@@ -54,7 +64,7 @@ for(mm in seq(length(model))) {
                                         min = minp[[ii]][nn], 
                                         mode = modep[[ii]][nn],  
                                         max = maxp[[ii]][nn], 
-                                        shape = 4))
+                                        shape = shapep[kk]))
           }
         }
         bytaxa[[ii]] <- byindiv
@@ -75,37 +85,43 @@ for(mm in seq(length(model))) {
 sim.df <- melt(bymodel)
 names(sim.df) <- c('age', 'sp', 'ntax', 'samp.form', 'mean.occ', 'model')
 
+sim.df.beta <- sim.df[sim.df$ntax == 3 & 
+                      sim.df$samp.form == 1 &
+                      sim.df$mean.occ == 1 & 
+                      sim.df$model == 1, ]
+sim.df.pert <- sim.df[sim.df$ntax == 3 & 
+                      sim.df$samp.form == 2 &
+                      sim.df$mean.occ == 1 & 
+                      sim.df$model == 2, ]
 
 
-sim.df.short <- sim.df[sim.df$ntax == 3 & 
-                       sim.df$samp.form == 3 &
-                       sim.df$mean.occ == 1 & 
-                       sim.df$model == 1, ]
+stan.beta <- sort.data(sim.df.beta)
+stan.pert <- sort.data(sim.df.pert)
 
-left.trunc <- min(laply(split(sim.df.short$age, sim.df.short$sp), min))
+#with(stan.beta, {stan_rdump(list = c('N', 'S', 'M',
+#                                     'y', 'd', 'sp'),
+#                            file = '../data/data_dump/sim_beta.data.R')})
+#with(stan.pert, {stan_rdump(list = c('N', 'S', 'M',
+#                                     'y', 'd', 'sp'),
+#                            file = '../data/data_dump/sim_pert.data.R')})
 
-sim.df.short$sp <- mapvalues(sim.df.short$sp, from = unique(sim.df.short$sp), 
-                             to = seq(length(unique(sim.df.short$sp))))
+rb.stan.beta <- stan(file = '../stan/reflected_beta.stan',
+                     data = stan.beta,
+                     chains = 1, iter = 1)
+rbblist <- mclapply(1:4, mc.cores = detectCores(), 
+                    function(i) stan(fit = rb.stan.beta, 
+                                     iter = 2000,
+                                     data = stan.beta, 
+                                     chains = 1, chain_id = 1, refresh = -1))
+rbbfit <- sflist2stanfit(rbblist)
 
-d <- laply(split(sim.df.short$age, sim.df.short$sp), max)
 
-standata <- list(N = nrow(sim.df.short),
-                 S = max(sim.df.short$sp),
-                 L = left.trunc,
-                 M = max(theta[[1]]),
-                 y = sim.df.short$age,
-                 d = d,
-                 taxon = sim.df.short$sp)
-
-#with(standata, {stan_rdump(list = c('N', 'S', 'L', 'M',
-#                                    'y', 'd', 'taxon'),
-#                           file = '../data/data_dump/sim_out.data.R')})
-#weibull.stan <- stan(file = '../stan/weibull.stan',
-#                     data = standata,
-#                     chains = 1, iter = 1)
-#wlist <- mclapply(1:4, mc.cores = detectCores(), 
-#                  function(i) stan(fit = weibull.stan, 
-#                                   iter = 2000,
-#                                   data = standata, 
-#                                   chains = 1, chain_id = 1, refresh = -1))
-#wfit <- sflist2stanfit(wlist)
+rb.stan.pert <- stan(file = '../stan/reflected_beta.stan',
+                     data = stan.pert,
+                     chains = 1, iter = 1)
+rbplist <- mclapply(1:4, mc.cores = detectCores(), 
+                    function(i) stan(fit = rb.stan.pert,
+                                     iter = 2000,
+                                     data = stan.pert, 
+                                     chains = 1, chain_id = 1, refresh = -1))
+rbpfit <- sflist2stanfit(rbplist)

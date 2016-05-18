@@ -1,19 +1,19 @@
 functions {
   /**
-   * return log probability of observation y given lambda and theta
+   * return probability of observation y given lambda and theta
    *
    * @param y value between 0 and theta of occurrence time
    * @param lambda shape of the sampling profile
    * @param theta duration of taxon
-   * @return log probability of occurrence time
+   * @return probability of occurrence time
    */
   real reflected_beta_log(real y, real lambda, real theta) {
     real p;
 
     if(lambda > 0) {
-      p <- ((1 + lambda) / theta) * ((y / theta)^lambda);
+      p <- ((1 + lambda) / theta) * pow((y / theta), lambda);
     } else if(lambda <= 0) {
-      p <- ((1 - lambda) / theta) * (1 - (y / theta))^(lambda * -1);
+      p <- ((1 - lambda) / theta) * pow((1 - y / theta), (lambda * -1));
     }
     return log(p);
   }
@@ -21,30 +21,33 @@ functions {
 data {
   int N;  // total number of occurrences
   int S;
-  real L;  // left-truncation point
 
   real y[N];  // occurrence ages
-  int taxon[N];  // which species is occurrence from
+  int sp[N];
+  vector[S] d;
 }
 parameters {
-  vector<lower=0>[S] duration;  // duration
-  real<lower=0> shape;  // shape of weibull for duration
-  real<lower=0> scale;  // scale of weibull for duration
+  vector<lower=1>[S] theta_raw;  // duration
+  real<lower=0> alpha;
+  real<lower=0> sigma;
   
-  real sampling;  // profile of sampling probability
+  real lambda;  // profile of sampling probability
 }
 transformed parameters {
+  vector<lower=0>[S] theta;
+
+  theta <- theta_raw .* d;
 }
 model {
   // this is where i would put in the censoring information
-  shape ~ lognormal(0, 0.3);
-  scale ~ normal(0, 4);
+
+  increment_log_prob(weibull_log(theta, alpha, sigma));
   
-  duration ~ weibull(shape, scale);
+  alpha ~ lognormal(0, 0.3);
+  sigma ~ exponential(0.25);
 
-  sampling ~ normal(0, 1);
-
+  lambda ~ normal(0, 1);
   for(n in 1:N) {
-    y[n] ~ reflected_beta(sampling, duration[taxon[n]]);
+    y[n] ~ reflected_beta(lambda, theta[sp[n]]);
   }
 }

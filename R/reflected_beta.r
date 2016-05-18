@@ -13,12 +13,12 @@
 #' @examples
 #' pdf.refbeta(0.5, lambda = 0, theta = 1)
 pdf.refbeta <- function(x, lambda, theta) {
-  if(lambda > 0) {
-    p <- ((1 + lambda) / theta) * ((x / theta)^lambda)
-  } else if(lambda <= 0){
-    p <- ((1 - lambda) / theta) * (1 - (x / theta))^(lambda * -1)
+  if(lambda <= 0) {
+    f <- ((1 - lambda) / theta) * (1 - (x / theta))^(-lambda)
+  } else if(lambda > 0) {
+    f <- ((1 + lambda) / theta) * (x / theta)^(lambda)
   }
-  p
+  f
 }
 
 
