@@ -34,14 +34,13 @@ parameters {
   real lambda;  // profile of sampling probability
 }
 transformed parameters {
-  vector<lower=0>[S] theta;
+  vector[S] theta;
 
-  theta <- theta_raw .* d;
+  theta <- theta_raw .* d;  // gives correct lower bound
 }
 model {
-  // this is where i would put in the censoring information
-
   increment_log_prob(weibull_log(theta, alpha, sigma));
+  increment_log_prob(log(theta - d)); //jacobian adjustment for lower bound?
   
   alpha ~ lognormal(0, 0.3);
   sigma ~ exponential(0.25);

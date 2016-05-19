@@ -28,20 +28,17 @@ functions {
 data {
   int N;  // total number of occurrences
   int S;  // total number of species
-  real M;  // maximum possible age of origination
 
   real y[N];  // occurrence ages
-  int taxon[N];  // which species is occurrence n from
+  int sp[N];  // which species is occurrence n from
   vector[S] fad;  // species first appearance date
   vector[S] lad;  // species last appearance date
 }
 parameters {
-  vector<lower=0,upper=1>[S] start_raw;
+  vector<upper=1>[S] start_raw;
   vector<lower=1>[S] end_raw;
 
-  vector<lower=0>[S] l;  // shape
-  real l_mu;  // mean of exp(l)
-  real<lower=0> l_sigma;  // stdec of exp(l)
+  real<lower=0> l;  // shape
 
   real<lower=0> shape;  // shape of weibull for end - start
   real<lower=0> scale;  // scale of weibull for end - start
@@ -63,10 +60,13 @@ model {
 
   // this is where i would put in the censoring information
   increment_log_prob(weibull_log(end - start, shape, scale));
-  shape ~ lognormal(0, 0.3);
+  increment_log_prob(log(end - lad)); //jacobian adjustment for lower bound?
+  increment_log_prob(log(lad - start)); //jacobian adjustment for upper bound?
+
+shape ~ lognormal(0, 0.3);
   scale ~ exponential(0.5);
 
   for(n in 1:N) {
-    y[n] ~ pert(start[taxon[n]], end[taxon[n]], mid[taxon[n]], l[n]);
+    y[n] ~ pert(start[sp[n]], end[sp[n]], mid[sp[n]], l);
   }
 }
