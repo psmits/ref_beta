@@ -1,4 +1,5 @@
 library(reshape2)
+library(stringr)
 library(rstan)
 library(mc2d)
 library(survival)
@@ -56,7 +57,8 @@ for(mm in seq(length(model))) {
         for(nn in seq(ntaxa[ii])) { 
           if(model[mm] == 'refbeta') {
             byindiv[[nn]] <- sort(rng.refbeta(samp.size[nn], 
-                                              lambda[kk], theta[[ii]][nn]))
+                                              lambda[kk], theta[[ii]][nn])) + 
+                             minp[[ii]][nn]
           } else if(model[mm] == 'pert') {
             # set to bell for now
             byindiv[[nn]] <- sort(rpert(samp.size[nn], 
@@ -114,24 +116,23 @@ sim.df.pert.narrow <- sim.df[sim.df$ntax == 3 &
                              sim.df$mean.occ == 1 & 
                              sim.df$model == 2, ]
 
-
-stan.beta.flat <- sort.data(sim.df.beta.flat, theta)
-stan.beta.rise <- sort.data(sim.df.beta.rise, theta)
-stan.beta.fall <- sort.data(sim.df.beta.fall, theta)
-stan.pert.mid <- sort.data(sim.df.pert.mid, theta)
-stan.pert.wide <- sort.data(sim.df.pert.wide, theta)
-stan.pert.narrow <- sort.data(sim.df.pert.narrow, theta)
-
-standata <- list(stan.beta.flat, stan.beta.rise, stan.beta.fall,
-                 stan.pert.mid, stan.pert.wide, stan.pert.narrow)
-
+datalist <- list(sim.df.beta.flat, sim.df.beta.rise, sim.df.beta.fall,
+                 sim.df.pert.mid, sim.df.pert.wide, sim.df.pert.narrow)
+standata <- llply(datalist, function(x) sort.data(x, theta))
+standata.special <- llply(datalist, function(x) 
+                          sort.data(x, theta, forbeta = FALSE))
 
 byfile <- list()
 for(ii in seq(length(stanfiles))) {
   bydata <- list()
   for(jj in seq(length(standata))) {
-    bydata[[jj]] <- fit.simulation(standata = standata[[jj]],
-                                   stanfile = stanfiles[[ii]])
+    if(str_detect(stanfiles[ii], 'pert')) {
+      bydata[[jj]] <- fit.simulation(standata = standata.special[[jj]],
+                                     stanfile = stanfiles[ii])
+    } else {
+      bydata[[jj]] <- fit.simulation(standata = standata[[jj]],
+                                     stanfile = stanfiles[ii])
+    }
   }
   byfile[[ii]] <- bydata
 }

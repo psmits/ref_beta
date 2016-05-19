@@ -28,15 +28,16 @@ functions {
 data {
   int N;  // total number of occurrences
   int S;  // total number of species
-  int M;  // maximum possible age of origination
+  real M;  // maximum possible age of origination
 
   real y[N];  // occurrence ages
   int taxon[N];  // which species is occurrence n from
+  vector[S] fad;  // species first appearance date
+  vector[S] lad;  // species last appearance date
 }
 parameters {
-  vector<lower=0,upper=M>[S] start;  // actual origination time
-  vector<lower=0,upper=M>[S] end;  // actual exinction time
-  vector<lower=0,upper=M>[S] mid;  // mode -- not constrained :( :( :( :(
+  vector<lower=0,upper=1>[S] start_raw;
+  vector<lower=1>[S] end_raw;
 
   vector<lower=0>[S] l;  // shape
   real l_mu;  // mean of exp(l)
@@ -46,12 +47,22 @@ parameters {
   real<lower=0> scale;  // scale of weibull for end - start
 }
 transformed parameters {
+  vector[S] start;  // actual origination time
+  vector[S] end;  // actual exinction time
+  vector[S] mid;  // mode
+
+  // have to scale these because individual-level parameter constraints
+  start <- start_raw .* fad;
+  end <- end_raw .* lad;
+
+  // constrain to be centered bell
+  mid <- ((end - start) / 2) + start;
 }
 model {
   l ~ lognormal(1.35, 0.5);
 
   // this is where i would put in the censoring information
-  (end - start) ~ weibull(shape, scale);
+  increment_log_prob(weibull_log(end - start, shape, scale));
   shape ~ lognormal(0, 0.3);
   scale ~ exponential(0.5);
 
