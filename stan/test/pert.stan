@@ -60,8 +60,6 @@ model {
 
   // this is where i would put in the censoring information
   increment_log_prob(weibull_log(end - start, shape, scale));
-  increment_log_prob(log(end - lad)); //jacobian adjustment for lower bound?
-  increment_log_prob(log(lad - start)); //jacobian adjustment for upper bound?
 
 shape ~ lognormal(0, 0.3);
   scale ~ exponential(0.5);

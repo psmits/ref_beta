@@ -39,8 +39,10 @@ transformed parameters {
   theta <- theta_raw .* d;  // gives correct lower bound
 }
 model {
+  // theta_unbound = log(theta - d)
+  // theta = exp(theta_unbound) + d 
+  // p_y(theta) = p_x(exp(theta_unbound) + d) * exp(theta_unbound)
   increment_log_prob(weibull_log(theta, alpha, sigma));
-  increment_log_prob(log(theta - d)); //jacobian adjustment for lower bound?
   
   alpha ~ lognormal(0, 0.3);
   sigma ~ exponential(0.25);
