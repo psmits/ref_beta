@@ -30,7 +30,7 @@ parameters {
   vector<lower=1>[S] theta_raw;  // duration
   real<lower=0> alpha;
   real<lower=0> sigma;
-  
+
   real lambda;  // profile of sampling probability
 }
 transformed parameters {
@@ -39,11 +39,12 @@ transformed parameters {
   theta <- theta_raw .* d;  // gives correct lower bound
 }
 model {
-  // theta_unbound = log(theta - d)
-  // theta = exp(theta_unbound) + d 
-  // p_y(theta) = p_x(exp(theta_unbound) + d) * exp(theta_unbound)
   increment_log_prob(weibull_log(theta, alpha, sigma));
-  
+  // log absolute derivative of theta_raw .* d
+  for(ss in 1:S) {  // jacobian adjustment is just a constant
+    increment_log_prob(log(fabs(d[ss])));
+  }
+
   alpha ~ lognormal(0, 0.3);
   sigma ~ exponential(0.25);
 
