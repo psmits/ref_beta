@@ -1,6 +1,7 @@
 May 21
 ------
 
+
 graph
 
 - estimate of sigma (expected duration when alpha = 1)
@@ -19,11 +20,17 @@ graph
 
 similar graph for estimate of weibull shape parameter alpha. can do this for all models except exponential.
 
-implemented jacobian correction to the log probability of the models. that is
+figured out the individual level constraints. required a transformed parameter
+that was given a prior distribution. i think this requires a jacobian correction
+because of what i've read on stan-users and the Stan manual, but i'm not 100%
+because it is a linear transform. would this be a case of local variable being
+the issue? or that the transform i've done isn't accounted for anywhere.
+
+i implemented jacobian correction to the log probability of the models. that is
 the absolute derivative of the transform. this is very easy in this case: it is
 just a constant. i'm not sure if i actually need the fabs() function call, but
 the rest of it seems correct. i have no idea who i'd talk to to check my work,
-maybe Liz or Michael of stan-users?
+maybe Liz or Michael or Steve Wang or stan-users?
 
 
 
