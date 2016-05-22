@@ -1,3 +1,34 @@
+May 21
+------
+
+graph
+
+- estimate of sigma (expected duration when alpha = 1)
+- density
+- for each of the models (same data)
+  - exponential
+  - weibull
+  - (reflected beta + exponential)
+  - reflected beta + weibull
+  - (pert + exponential)
+  - pert + weibull
+- facets 
+  - rows sampling
+  - cols weibull shape
+
+
+similar graph for estimate of weibull shape parameter alpha. can do this for all models except exponential.
+
+implemented jacobian correction to the log probability of the models. that is
+the absolute derivative of the transform. this is very easy in this case: it is
+just a constant. i'm not sure if i actually need the fabs() function call, but
+the rest of it seems correct. i have no idea who i'd talk to to check my work,
+maybe Liz or Michael of stan-users?
+
+
+
+******
+
 May 9
 -----
 
