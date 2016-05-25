@@ -6,11 +6,25 @@ library(survival)
 library(plyr)
 library(parallel)
 library(ggplot2)
+library(scales)
+library(grid)
 source('../R/sort_simulation.r')
 source('../R/fit_stan_to_sim.r')
 source('../R/run_full_simulation.r')
 source('../R/reflected_beta.r')
 
+
+# general plot settings
+theme_set(theme_minimal())
+# update theme
+cbp.long <- c('#000000', '#004949', '#009292', '#FF7DB6', '#FFB6DB', 
+              '#490092', '#006DDB', '#B66DFF', '#6DB6FF', '#B6DBFF', 
+              '#920000', '#924900', '#DBD100', '#24FF24', '#FFFF6D')[-1]
+grab <- laply(seq(5), function(x) seq(from = x, to = length(cbp.long), by = 5))
+cbp.long <- cbp.long[t(grab)]
+
+
+# what are the models to be used?
 stanfiles <- list.files(path = '../stan', 
                         pattern = '*.stan', 
                         full.names = TRUE)
@@ -29,9 +43,9 @@ lambda <- c(0, -1, 1)  # lambda for ref beta
 M <- 30  # maximum age of origination
 shapep <- c(2, 4, 6)  # not used
 
-decrease <- full.simulation(shapes[1], samp.mean, ntaxa, lambda, M)
-same <- full.simulation(shapes[2], samp.mean, ntaxa, lambda, M)
-increase <- full.simulation(shapes[3], samp.mean, ntaxa, lambda, M)
+decrease <- full.simulation(shapes[1], samp.mean, ntaxa, lambda, M, stanfiles)
+same <- full.simulation(shapes[2], samp.mean, ntaxa, lambda, M, stanfiles)
+increase <- full.simulation(shapes[3], samp.mean, ntaxa, lambda, M, stanfiles)
 
 # split the sigma estimates from the alpha estimates
 #   param column
@@ -45,6 +59,7 @@ dec.split <- split(decrease, decrease$param)
 sam.split <- split(same, same$param)
 inc.split <- split(increase, increase$param)
 
+
 # first for sigma
 sigma.est <- rbind(cbind(dec.split[[1]], shape = 'decrease'),
                    cbind(sam.split[[1]], shape = 'constant'),
@@ -53,7 +68,10 @@ sigmag <- ggplot(sigma.est, aes(x = value, colour = variable, fill = variable))
 sigmag <- sigmag + geom_vline(xintercept = 4)
 sigmag <- sigmag + geom_density(alpha = 0.2)
 sigmag <- sigmag + facet_grid(model ~ shape, scales = 'free_x')
-
+sigmag <- sigmag + scale_fill_manual(values = cbp.long)
+sigmag <- sigmag + scale_colour_manual(values = cbp.long)
+ggsave(filename = '../doc/figure/sigma_estimates.png', sigmag,
+       width = 4, height = 8)
 
 # and now for alpha
 alpha.est <- rbind(cbind(dec.split[[2]], shape = 'decrease'),
@@ -67,4 +85,7 @@ alphag <- alphag + geom_vline(data = alpha.df,
                                             colour = NULL, fill= NULL))
 alphag <- alphag + geom_density(alpha = 0.2)
 alphag <- alphag + facet_grid(model ~ shape, scales = 'free_x')
-
+alphag <- alphag + scale_fill_manual(values = cbp.long)
+alphag <- alphag + scale_colour_manual(values = cbp.long)
+ggsave(filename = '../doc/figure/alpha_estimates.png', alphag,
+       width = 4, height = 8)

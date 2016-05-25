@@ -1,3 +1,35 @@
+May 25
+------
+
+why do this simulation study?
+
+- we know the observed durations of fossil species are truncated (at both ends) by imperfect observation
+- there are a lot of different ways for estimating the "true" duration, or at one end of the duration, given the pattern of fossil preservation
+  - weird note, probability of sampling should be proportional to the number of
+    fossils recovered at that time point
+  - but not necessarily the number of fossils recovered over the entire duration
+- my focus is on applications in hierarchical models where duration and related parameters are the focus
+  - Bayesian context; analogous to measurement error model
+  - distributions of interest: reflected Beta, beta-PERT
+    - distributions have "true" duration as a (derived) parameter
+    - which means its prior can itself be a model w/ parameters of interest
+  - a lot of other approaches (Solow, Marshall, Wang, etc) aren't set up nicely to allow our uncertainty to flow through to the hyperparameters of interest
+- simulate 6 different fossil preservation profiles
+  - 3 refbeta specific, 3 pert specific
+  - all are considered "realistic"
+- different models
+  - no hierarchical aspect
+    - exponential
+    - weibull
+  - coupled with hierarchy
+    - (refbeta + exponential) 
+    - refbeta + weibull
+    - (pert + exponential) 
+    - pert + weibull
+  - note: only those coupled with weibull distribution can estimate shape
+
+
+
 May 21
 ------
 

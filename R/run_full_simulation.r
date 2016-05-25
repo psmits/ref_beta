@@ -1,4 +1,4 @@
-full.simulation <- function(shapes, samp.mean, ntaxa, lambda, M) {
+full.simulation <- function(shapes, samp.mean, ntaxa, lambda, M, stanfiles) {
   minp <- llply(ntaxa, function(x) runif(x, 0, M))
   maxp <- llply(ntaxa, function(x) rweibull(x, shape = shapes, scale = 4))
   maxp <- Map(function(x, y) x + y, minp, maxp)
@@ -92,6 +92,10 @@ minp[[ii]][nn]
   standata.special <- llply(datalist, function(x) 
                             sort.data(x, theta, forbeta = FALSE))
 
+  # save a data file for pert
+  #with(standata.special[[1]], 
+  #     {stan_rdump(c('N', 'S', 'M', 'y', 'y_old', 'd', 'fad', 'lad', 'sp'), 
+  #                 file = '../data/data_dump/special.data.R')})
   byfile <- list()
   for(ii in seq(length(stanfiles))) {
     bydata <- list()
@@ -111,7 +115,8 @@ minp[[ii]][nn]
   modelextract <- llply(byfile, function(x) 
                         llply(x, function(y) 
                               extract(y, permuted = TRUE)))
-  names(modelextract) <- c('exp', 'refbeta', 'weibull')
+  names(modelextract) <- c('exp', 'pert.exp', 'pert.wei', 'refbeta.exp',
+                           'refbeta.wei', 'weibull')
   modelextract <- llply(modelextract, function(x) {
                         names(x) <- c('flat', 'rise', 'fall', 
                                       'mid', 'wide', 'narrow')
@@ -120,39 +125,63 @@ minp[[ii]][nn]
 
 
   flat.sigma <- data.frame(exp = (1 / modelextract$exp$flat$rate[grab]), 
-                           refbeta = modelextract$refbeta$flat$sigma[grab], 
-                           weibull = modelextract$weibull$flat$scale[grab])
+                           weibull = modelextract$weibull$flat$scale[grab],
+                           pert.exp = modelextract$pert.exp$flat$scale[grab], 
+                           pert.wei = modelextract$pert.wei$flat$scale[grab], 
+                           refbeta.exp = modelextract$refbeta.exp$flat$sigma[grab], 
+                           refbeta.wei = modelextract$refbeta.wei$flat$sigma[grab])
   rise.sigma <- data.frame(exp = 1 / modelextract$exp$rise$rate[grab],
-                           refbeta = modelextract$refbeta$rise$sigma[grab],
-                           weibull = modelextract$weibull$rise$scale[grab])
+                           weibull = modelextract$weibull$rise$scale[grab],
+                           pert.exp = modelextract$pert.exp$rise$scale[grab], 
+                           pert.wei = modelextract$pert.wei$rise$scale[grab], 
+                           refbeta.exp = modelextract$refbeta.exp$rise$sigma[grab],
+                           refbeta.wei = modelextract$refbeta.wei$rise$sigma[grab])
   fall.sigma <- data.frame(exp = 1 / modelextract$exp$fall$rate[grab],
-                           refbeta = modelextract$refbeta$fall$sigma[grab],
-                           weibull = modelextract$weibull$fall$scale[grab])
+                           weibull = modelextract$weibull$fall$scale[grab],
+                           pert.exp = modelextract$pert$fall$scale[grab], 
+                           pert.wei = modelextract$pert$fall$scale[grab], 
+                           refbeta.exp = modelextract$refbeta.exp$fall$sigma[grab],
+                           refbeta.wei = modelextract$refbeta.wei$fall$sigma[grab])
   mid.sigma <- data.frame(exp = 1 / modelextract$exp$mid$rate[grab],
-                          refbeta = modelextract$refbeta$mid$sigma[grab],
-                          weibull = modelextract$weibull$mid$scale[grab])
+                          weibull = modelextract$weibull$mid$scale[grab],
+                          pert.exp = modelextract$pert.exp$mid$scale[grab], 
+                          pert.wei = modelextract$pert.wei$mid$scale[grab], 
+                          refbeta.exp = modelextract$refbeta.exp$mid$sigma[grab],
+                          refbeta.wei = modelextract$refbeta.wei$mid$sigma[grab])
   wide.sigma <- data.frame(exp = 1 / modelextract$exp$wide$rate[grab],
-                           refbeta = modelextract$refbeta$wide$sigma[grab],
-                           weibull = modelextract$weibull$wide$scale[grab])
+                           weibull = modelextract$weibull$wide$scale[grab],
+                           pert.exp = modelextract$pert.exp$wide$scale[grab], 
+                           pert.wei = modelextract$pert.wei$wide$scale[grab], 
+                           refbeta.exp = modelextract$refbeta.exp$wide$sigma[grab],
+                           refbeta.wei = modelextract$refbeta.wei$wide$sigma[grab])
   narrow.sigma <- data.frame(exp = 1 / modelextract$exp$narrow$rate[grab],
-                             refbeta = modelextract$refbeta$narrow$sigma[grab],
-                             weibull = modelextract$weibull$narrow$scale[grab])
+                             weibull = modelextract$weibull$narrow$scale[grab],
+                             pert.exp = modelextract$pert.exp$narrow$scale[grab], 
+                             pert.wei = modelextract$pert.wei$narrow$scale[grab], 
+                             refbeta.exp = modelextract$refbeta.exp$narrow$sigma[grab],
+                             refbeta.wei = modelextract$refbeta.wei$narrow$sigma[grab])
   # make list
   sigma.est <- list(flat.sigma, rise.sigma, fall.sigma, 
                     mid.sigma, wide.sigma, narrow.sigma)
 
 
-  flat.alpha <- data.frame(refbeta = modelextract$refbeta$flat$alpha[grab], 
+  flat.alpha <- data.frame(refbeta.wei = modelextract$refbeta.wei$flat$alpha[grab], 
+                           pert.wei = modelextract$pert.wei$flat$shape[grab],
                            weibull = modelextract$weibull$flat$shape[grab])
-  rise.alpha <- data.frame(refbeta = modelextract$refbeta$rise$alpha[grab],
+  rise.alpha <- data.frame(refbeta.wei = modelextract$refbeta.wei$rise$alpha[grab],
+                           pert.wei = modelextract$pert.wei$rise$shape[grab],
                            weibull = modelextract$weibull$rise$shape[grab])
-  fall.alpha <- data.frame(refbeta = modelextract$refbeta$fall$alpha[grab],
+  fall.alpha <- data.frame(refbeta.wei = modelextract$refbeta.wei$fall$alpha[grab],
+                           pert.wei = modelextract$pert.wei$fall$shape[grab],
                            weibull = modelextract$weibull$fall$shape[grab])
-  mid.alpha <- data.frame(refbeta = modelextract$refbeta$mid$alpha[grab], 
+  mid.alpha <- data.frame(refbeta.wei = modelextract$refbeta.wei$mid$alpha[grab], 
+                          pert.wei = modelextract$pert.wei$mid$shape[grab],
                           weibull = modelextract$weibull$mid$shape[grab])
-  wide.alpha <- data.frame(refbeta = modelextract$refbeta$wide$alpha[grab],
+  wide.alpha <- data.frame(refbeta.wei = modelextract$refbeta.wei$wide$alpha[grab],
+                           pert.wei = modelextract$pert.wei$wide$shape[grab],
                            weibull = modelextract$weibull$wide$shape[grab])
-  narrow.alpha <- data.frame(refbeta = modelextract$refbeta$narrow$alpha[grab],
+  narrow.alpha <- data.frame(refbeta.wei = modelextract$refbeta.wei$narrow$alpha[grab],
+                             pert.wei = modelextract$pert.wei$narrow$shape[grab],
                              weibull = modelextract$weibull$narrow$shape[grab])
   # make list
   alpha.est <- list(flat.alpha, rise.alpha, fall.alpha, 
