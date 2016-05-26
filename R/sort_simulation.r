@@ -1,4 +1,4 @@
-sort.data <- function(sim.df.short, theta, forbeta = TRUE) {
+sort.data <- function(sim.df.short, theta, forbeta = TRUE, nosingle = TRUE) {
   sim.df.short <- sim.df.short[sim.df.short$sp %in% 
                                which(table(sim.df.short$sp) > 1), ]
 
@@ -18,7 +18,10 @@ sort.data <- function(sim.df.short, theta, forbeta = TRUE) {
                                to = seq(length(unique(sim.df.short$sp))))
 
   # can't have species with only 1 occurrence
-  keep <- which(unique(sim.df.short$sp) %in% which(table(sim.df.short$sp) != 1))
+  if(nosingle) {
+    keep <- which(unique(sim.df.short$sp) %in% 
+                  which(table(sim.df.short$sp) != 1))
+  }
 
   sim.df.short <- sim.df.short[sim.df.short$sp %in% keep, ]
   sim.df.short$sp <- mapvalues(sim.df.short$sp, 

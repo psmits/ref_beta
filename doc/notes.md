@@ -29,6 +29,21 @@ why do this simulation study?
   - note: only those coupled with weibull distribution can estimate shape
 
 
+remaining concerns about the simulation
+
+- issue of left truncation with the beta distribution
+  - duration always underestimate of the start time
+  - does this mean i have to estimate both directions?
+- what is the most realistic sampling profile and how i simulate it?
+  - liow quental marshall syst biol say hat + increase 
+  - could we say this is just pert with l > 4?
+    - what happens when we let l be a free parameter instead of 4?
+
+
+
+
+
+
 
 May 21
 ------

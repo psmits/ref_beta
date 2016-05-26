@@ -19,9 +19,9 @@ theme_set(theme_minimal())
 # update theme
 cbp.long <- c('#000000', '#004949', '#009292', '#FF7DB6', '#FFB6DB', 
               '#490092', '#006DDB', '#B66DFF', '#6DB6FF', '#B6DBFF', 
-              '#920000', '#924900', '#DBD100', '#24FF24', '#FFFF6D')[-1]
+              '#920000', '#924900', '#DBD100', '#24FF24', '#FFFF6D')
 grab <- laply(seq(5), function(x) seq(from = x, to = length(cbp.long), by = 5))
-cbp.long <- cbp.long[t(grab)]
+cbp.long <- cbp.long[t(grab)][-1]
 
 
 # what are the models to be used?
@@ -71,7 +71,7 @@ sigmag <- sigmag + facet_grid(model ~ shape, scales = 'free_x')
 sigmag <- sigmag + scale_fill_manual(values = cbp.long)
 sigmag <- sigmag + scale_colour_manual(values = cbp.long)
 ggsave(filename = '../doc/figure/sigma_estimates.png', sigmag,
-       width = 4, height = 8)
+       width = 6, height = 8)
 
 # and now for alpha
 alpha.est <- rbind(cbind(dec.split[[2]], shape = 'decrease'),
@@ -88,4 +88,4 @@ alphag <- alphag + facet_grid(model ~ shape, scales = 'free_x')
 alphag <- alphag + scale_fill_manual(values = cbp.long)
 alphag <- alphag + scale_colour_manual(values = cbp.long)
 ggsave(filename = '../doc/figure/alpha_estimates.png', alphag,
-       width = 4, height = 8)
+       width = 6, height = 8)
