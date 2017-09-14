@@ -38,9 +38,9 @@ remaining concerns about the simulation
   - liow quental marshall syst biol say hat + increase 
   - could we say this is just pert with l > 4?
     - what happens when we let l be a free parameter instead of 4?
-
-
-
+- posterior predictive checking to see if how the models actually *fit* to the
+  underlying data being analyzed
+    - compare estimated durations to true durations
 
 
 
